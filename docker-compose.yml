@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    image: earnscore:latest
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      # named volume: first start is populated from the image (generated dataset), then persists
+      - earnscore-data:/app/backend/data
+    restart: unless-stopped
+volumes:
+  earnscore-data:
