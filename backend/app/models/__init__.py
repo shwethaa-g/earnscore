@@ -1,4 +1,4 @@
-"""SQLAlchemy models (BUILD.md section 4)."""
+"""SQLAlchemy models."""
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
@@ -204,6 +204,7 @@ class Snapshot(Base):
     seasonality_method: Mapped[str] = mapped_column(String(30))
     series: Mapped[dict] = mapped_column(JSON, default=dict)
     reconciliation: Mapped[dict] = mapped_column(JSON, default=dict)
+    source_ids: Mapped[list] = mapped_column(JSON, default=list)  # sources whose data this snapshot was scored on
     pillars: Mapped[list[PillarScore]] = relationship(cascade="all, delete-orphan", order_by="PillarScore.id")
     reasons: Mapped[list[ReasonCode]] = relationship(cascade="all, delete-orphan", order_by="ReasonCode.id")
 

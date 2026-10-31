@@ -13,7 +13,7 @@ WORKDIR /app/backend
 COPY backend/requirements.txt ./
 RUN pip install -r requirements.txt
 COPY backend/ ./
-# The generated dataset (DATA_SOURCES.md section 3) is built into the image: deterministic seed, written as
+# The generated dataset is built into the image: deterministic seed, written as
 # statement files and ingested through the normal upload pipeline, then the validation simulator runs.
 RUN python -m app.cli migrate && python -m app.cli generate && python -m app.cli simulate --workers 5000
 COPY --from=web /web/dist /app/frontend/dist

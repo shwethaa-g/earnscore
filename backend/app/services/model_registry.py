@@ -24,7 +24,7 @@ def ensure_v1(db: Session) -> ModelVersion:
         features=[{"pillar": p, "components": list(C.SUB_WEIGHTS[p])} for p in PILLARS],
         weights={"pillars": C.PILLAR_WEIGHTS, "components": C.SUB_WEIGHTS, "curves": {k: v for k, v in C.CURVES.items()},
                  "bands": C.BANDS},
-        training_data={"description": "Expert scorecard: weights set by design (BUILD.md section 6), not fitted to data."},
+        training_data={"description": "Expert scorecard: weights set by design, not fitted to data."},
         notes="Glass-box weighted sum of five income-neutral pillars. Income level, hours worked and protected "
               "attributes are not inputs.",
     )

@@ -83,6 +83,36 @@ def test_upload_requires_active_consent_and_revoke_withdraws_data():
     assert "consent.revoke" in actions()
 
 
+def test_revoking_consent_closes_share_links_that_include_its_data(officer):
+    w = new_worker()
+    life, files = life_files(idx=13, weeks=30, accounts=1)
+    plat = life.persona.platforms[0]
+    _, bank_consent = upload(w, "bank_statement", "b.csv", files["bank0"])
+    lender = next(l for l in w.get("/api/meta/lenders").json()["lenders"] if l["name"] == "Test Lender Co-op")
+    share = {"lender_id": lender["id"], "days": 14, "requested_amount": 10000, "requested_tenure_weeks": 26}
+    first = w.post("/api/worker/shares", json=share).json()  # scored on the bank statement only
+    r, plat_consent = upload(w, "platform_statement", "p.csv", files[plat], platform=plat)
+    assert r.json()["status"] == "processed"
+    second = w.post("/api/worker/shares", json=share).json()  # scored on bank + platform
+
+    # the platform data is only in the second report: only that link closes
+    rv = w.post(f"/api/worker/consents/{plat_consent['id']}/revoke").json()
+    assert rv["sources_withdrawn"] == 1 and rv["share_links_closed"] == 1
+    links = {a["id"]: a["share"] for a in w.get("/api/worker/applications").json()["applications"]}
+    assert links[first["id"]]["valid"] is True and links[second["id"]]["valid"] is False
+    assert officer.get(f"/api/officer/applications/{second['id']}").status_code == 410
+    assert officer.get(f"/api/officer/applications/{first['id']}").status_code == 200
+
+    # the bank data is in the first report: revoking it closes that link too
+    rv = w.post(f"/api/worker/consents/{bank_consent['id']}/revoke").json()
+    assert rv["share_links_closed"] == 1
+    assert officer.get(f"/api/officer/applications/{first['id']}").status_code == 410
+    with SessionLocal() as db:
+        closed = db.scalars(select(AuditLog).where(AuditLog.action == "share.revoke",
+                                                   AuditLog.target_id.in_([str(first["share"]["id"]), str(second["share"]["id"])]))).all()
+        assert len(closed) == 2 and all(a.details["reason"] == "consent_withdrawn" for a in closed)
+
+
 def test_duplicate_upload_is_detected():
     w = new_worker()
     _, files = life_files(idx=12, weeks=20, accounts=1)

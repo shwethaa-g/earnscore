@@ -1,6 +1,6 @@
 """Statement parsers: CSV / XLSX / text PDF bank statements and platform payout statements.
 
-Contract (DATA_SOURCES.md section 4): any column order, auto-detected mapping with a confidence score
+Contract: any column order, auto-detected mapping with a confidence score
 (the UI asks the user to map columns when confidence < 0.9), dd/mm/yyyy, dd-mm-yy and yyyy-mm-dd dates,
 debit/credit columns or one signed amount column, and no silent row drops (every skipped row has a reason).
 """
@@ -188,8 +188,14 @@ def sniff_type(filename: str, data: bytes) -> str:
     ext = Path(filename).suffix.lower()
     if data[:4] == b"%PDF":
         return "pdf"
+    if ext == ".xls" or data[:4] == b"\xd0\xcf\x11\xe0":  # legacy Excel (OLE2)
+        raise ParseError("Old Excel files (.xls) are not supported. Open the file and save it as .xlsx or CSV, then upload again.")
+    if ext in {".jpg", ".jpeg", ".png", ".heic", ".webp"}:
+        raise ParseError("Photos of statements are not supported. Download the statement from your bank as CSV, Excel (.xlsx) or PDF.")
     if data[:2] == b"PK":
-        return "xlsx"
+        if ext in {".xlsx", ""}:
+            return "xlsx"
+        raise ParseError("Unsupported file type. Upload CSV, XLSX or PDF.")  # e.g. .docx or .zip
     if ext in {".csv", ".txt"}:
         if b"\x00" in data[:2048]:
             raise ParseError("This file does not look like a text CSV.")

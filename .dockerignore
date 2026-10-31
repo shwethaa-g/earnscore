@@ -8,3 +8,6 @@ frontend/test-results
 frontend/playwright-report
 .env
 .git
+*.md
+!README.md
+.claude

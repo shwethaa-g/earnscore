@@ -1,4 +1,4 @@
-"""Deterministic classification rules for bank transactions (BUILD.md section 5.2).
+"""Deterministic classification rules for bank transactions.
 
 Rules always run offline. An optional language model may re-tag only rows these rules leave as
 `other / unclassified`; see app/services/language.py.

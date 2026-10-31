@@ -13,3 +13,18 @@ frontend/playwright-report/
 .env
 *.log
 .DS_Store
+# Local planning documents, notes and assistant settings (kept on disk, not in the repository)
+CLAUDE.md
+.claude/
+BUILD.md
+PROJECT.md
+PROMPTS.md
+DATA_SOURCES.md
+PROGRESS.md
+HANDOVER.md
+WALKTHROUGH.md
+REAL_VS_GENERATED.md
+*.prompt.md
+notes/
+.env.*
+!.env.example

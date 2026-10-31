@@ -65,9 +65,9 @@ def revoke_consent(consent_id: int, request: Request, user: User = Depends(worke
         raise HTTPException(404, "Consent not found.")
     if c.revoked_at:
         raise HTTPException(409, "This consent is already revoked.")
-    n = consent_svc.revoke(db, c, user.id, client_ip(request))
+    n, links = consent_svc.revoke(db, c, user.id, client_ip(request))
     db.commit()
-    return consent_svc.consent_out(c) | {"sources_withdrawn": n}
+    return consent_svc.consent_out(c) | {"sources_withdrawn": n, "share_links_closed": links}
 
 
 # ---------------- sources

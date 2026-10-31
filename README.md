@@ -41,8 +41,20 @@ make install                 # Windows: mingw32-make install (or run the command
 make data                    # migrate + generate + simulate + seed  (reads .env)
 make dev-api                 # FastAPI on :8000
 make dev-web                 # Vite on :5173 (proxies /api to :8000)
-make test                    # pytest + vitest + Playwright (needs the API running on :8000 with a built frontend)
+make test                    # pytest + vitest + Playwright (needs the app running on :8000)
+make reset                   # wipe the app database, restore the generated dataset and verify it (Docker)
 ```
+
+### Reset to a clean state
+
+`make reset` (Windows without make: `powershell -ExecutionPolicy Bypass -File scripts/reset.ps1`; macOS/Linux: `sh scripts/reset.sh`) runs `docker compose down -v` and `docker compose up -d --wait`. It then runs `python -m app.cli verify-clean` inside the container, which:
+
+- waits for `/healthz`;
+- checks the role accounts, the two lenders and the 24 generated workers, and that nobody has registered since;
+- re-scores six reference workers read-only (for example Meena Sundaram 77 B High, Suresh Kumar 78 Low confidence, Pooja Sharma 62 C, Deepa Krishnan 24 E, Vijay Anand with anti-gaming flags);
+- confirms no monthly refresh has run yet.
+
+It prints `Ready: clean state` and the URL. Everything done in the app since the last reset is deleted.
 
 ### Logins
 
@@ -115,16 +127,15 @@ All formulas are in `backend/app/scoring/engine.py`; every constant is in `backe
 | Scoring logic, reconciliation, seasonality, pillars, bands, safe EMI | **Real computation** | Code in `backend/app/scoring` and `backend/app/ingest`, run on whatever data is in the database |
 | Login, roles, consent, audit log, share links, disputes, decisions | **Real functionality** | Database writes by actual users |
 | Bank statements and platform payout statements uploaded by a user | **Real data path** | The user's own files (CSV/XLSX/PDF). Any genuine statement works. |
-| Account Aggregator connection | **Not connected.** No Setu credentials were provided. The `AAProvider` interface exists (`backend/app/ingest/aa.py`) and the upload path is used. Real AA needs a regulated lender as the data recipient. | — |
-| Worker accounts and transaction histories pre-loaded for the evaluation (24 named workers + 588 cohort members) | **Generated** | Deterministic generator (`backend/app/sim/generate.py`, seed 20261030). They are not real people or real bank records. Statements are written as files in five formats and ingested through the normal upload pipeline. |
+| Account Aggregator connection | **Not connected.** There is no live Account Aggregator integration. The `AAProvider` interface exists (`backend/app/ingest/aa.py`) and statement upload is the working path. Real AA needs a regulated lender as the data recipient. | — |
+| Pre-loaded worker accounts and transaction histories (24 named workers + 588 cohort members) | **Generated** | Deterministic generator (`backend/app/sim/generate.py`, seed 20261030). They are not real people or real bank records. Statements are written as files in five formats and ingested through the normal upload pipeline. |
 | Past applications and decisions of generated workers, and the officer "R. Lakshmi" who made them | **Generated** | Same generator, applying a fixed policy to computed reports |
 | Cohort seasonality indices | **Derived** | Computed from the weekly series in the database (generated plus uploaded) |
 | Validation results (approval uplift, AUC, KS, fairness gaps, recourse feasibility, EBM comparison) | **Simulated** | `backend/app/sim/simulate.py`. They show how the method behaves under stated assumptions, not real-world accuracy. |
-| Market numbers (12M workers, 23.5M, 40% under ₹15,000) | **Cited** | Economic Survey 2025-26, NITI Aayog; used only in the pitch, not computed |
 | Platform names (Swiggy, Zomato, Uber, Rapido, Urban Company) in generated statements | **Labels only** | No data was obtained from these companies and no partnership exists |
 | Bank names in generated statements (Pallava, Vijayanagar, Konark, Satpura Bank) and lenders (Nilavu Community Credit, Prakriti Gig Finance) | **Fictional** | Invented names. Account numbers start `9999 0000`, phone numbers `+91 10000`, emails use the reserved `example.com` domain. |
 
-No SMS, contacts, call logs or location are collected anywhere. Uploaded data belongs to the uploader, can be deleted by them, and is never used for training without the explicit training consent flag on the profile.
+No SMS, contacts, call logs or location are collected anywhere. Uploaded data belongs to the uploader, can be deleted by them, and is never used for training without the explicit training consent flag on the profile. Revoking (or the expiry of) a consent withdraws its sources immediately, schedules their deletion after the grace period, and closes every share link whose lender report was scored on data from those sources.
 
 ## Validation results
 
@@ -162,14 +173,28 @@ What these numbers do and do not show:
 - PDF parsing supports text-based statements with a ruled transaction table; scanned images are rejected with a clear message.
 - Tamil and Hindi text was written by the developer and needs review by native speakers.
 - On Render's free plan the disk is not persistent: each restart returns to the generated dataset baked into the image, and changes made by users are lost. A paid persistent disk mounted at `/app/backend/data` removes this.
-- Market numbers use the team's assumptions for price and usage.
 
 ## Tests
 
 - `backend/tests` (pytest): parsers (CSV formats, XLSX, PDF, scanned PDF, malformed rows), reconciliation edge cases (1% tolerance, 0–3 day window, payer match, duplicates), classification and round trips, seasonality (STL, cohort, fallback), each pillar, bands, DSI, safe EMI, routing, reason-code evidence, recourse validity, loan shape, auth and role access, CSRF, rate limiting, consent revocation, duplicate uploads, column mapping, source deletion, upload limits, share-link expiry, audit writes, the full API flow, and the language post-check (an LLM cannot change any number or the score).
 - `frontend/src/**/*.test.ts` (vitest): formatting, translation key coverage and placeholder parity, forbidden wording.
 - `frontend/e2e/flow.spec.ts` (Playwright): worker registers, consents, uploads a bank and two payout statements, sees the passport and evidence, switches language, shares with a lender; officer opens the report and drill-downs, decides with a mandatory reason code; worker sees the decision.
+- `frontend/e2e/sweep.spec.ts` (Playwright): every page for every role at 1280 px and 360 px, worker pages in Tamil and Hindi; no console errors, no horizontal overflow.
+- `frontend/e2e/walkthrough.spec.ts` (Playwright): the full manual test path. Worker: register, consent, upload, reconciliation, passport, languages, recourse, share, dispute. Officer: queue, report, evidence, reconciliation, loan shape, decision with override, dispute response, monthly refresh and early warning. Worker: decision, consent revocation closing the share link, source deletion. Admin pages. Edge cases: low confidence, anti-gaming flags, closed share link, wrong-role URLs, unsupported and corrupted files, column mapping, wrong password, session expiry. It needs a freshly reset container (`make reset`).
+
+Commands:
+
+```bash
+make test-backend            # pytest (backend/tests), uses its own temporary database
+make test-frontend           # vitest
+make reset && make e2e       # Playwright against http://127.0.0.1:8000 (or E2E_BASE_URL); reads SEED_* from .env
+make test                    # all three
+```
+
+Upload files used by the Playwright flows are in `frontend/e2e/fixtures` (generated and fictional; `python -m app.cli walkthrough-files` rewrites them).
 
 ## Deployment
 
 `render.yaml` deploys the Docker image to Render as one web service with `/healthz` as the health check. Set `ALLOWED_ORIGIN` to the service URL and the `SEED_*` variables in the Render dashboard; `SECRET_KEY` is generated. `GEMINI_API_KEY` is optional.
+
+The generated dataset and the validation run are built into the image, and the service has no persistent disk, so every deploy and restart starts from the freshly generated data. On start, `python -m app.cli ensure-data` also regenerates the dataset if it ever finds an empty database (for example a newly attached disk), so the app never comes up empty.

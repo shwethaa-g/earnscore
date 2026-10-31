@@ -97,8 +97,13 @@ def test_text_pdf_parser_and_scanned_pdf_message():
 
 
 def test_unsupported_type():
-    with pytest.raises(parsers.ParseError):
+    with pytest.raises(parsers.ParseError, match="Photos"):
         parsers.sniff_type("photo.jpg", b"\xff\xd8\xff")
+    with pytest.raises(parsers.ParseError, match=r"\.xls"):
+        parsers.sniff_type("statement.xls", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1")
+    with pytest.raises(parsers.ParseError, match="Unsupported file type"):
+        parsers.sniff_type("statement.docx", b"PK\x03\x04")
+    assert parsers.sniff_type("statement.xlsx", b"PK\x03\x04") == "xlsx"
 
 
 def test_platform_payout_statement():

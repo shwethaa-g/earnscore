@@ -1,4 +1,4 @@
-"""Actionable recourse (BUILD.md 6.7): constrained search over actionable features only.
+"""Actionable recourse: constrained search over actionable features only.
 
 Each candidate is re-scored with the real scoring function (engine.score_features). Only candidates that
 move the worker into a better band are returned. Hours worked, number of platforms and income level are

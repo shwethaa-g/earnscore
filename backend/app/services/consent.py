@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.ingest.pipeline import delete_source, rebuild_ledger
-from app.models import Consent, Source, utcnow
+from app.models import Application, Consent, ShareLink, Snapshot, Source, utcnow
 from app.services.audit import audit
 
 SCOPES = {
@@ -44,31 +44,51 @@ def grant(db: Session, user_id: int, source_kind: str, purpose: str, days: int |
     return c
 
 
-def _withdraw_sources(db: Session, consent: Consent) -> int:
-    due = utcnow() + timedelta(days=get_settings().consent_purge_days)
+def _close_share_links(db: Session, consent: Consent, source_ids: set[int], actor_id: int | None, ip: str = "") -> int:
+    """Close every open share link whose report was scored on data from these sources."""
+    if not source_ids:
+        return 0
+    now = utcnow()
+    rows = db.execute(select(ShareLink, Snapshot.source_ids).join(Application, Application.share_link_id == ShareLink.id)
+                      .join(Snapshot, Snapshot.id == Application.snapshot_id)
+                      .where(ShareLink.user_id == consent.user_id, ShareLink.revoked_at.is_(None),
+                             ShareLink.expires_at > now)).all()
     n = 0
+    for link, used in rows:
+        if source_ids & set(used or []):
+            link.revoked_at = now
+            audit(db, actor_id, "share.revoke", "share_link", link.id,
+                  {"reason": "consent_withdrawn", "consent_id": consent.id}, ip)
+            n += 1
+    return n
+
+
+def _withdraw_sources(db: Session, consent: Consent, actor_id: int | None = None, ip: str = "") -> tuple[int, int]:
+    """Withdraw the consent's sources and close share links that include their data. Returns (sources, links)."""
+    due = utcnow() + timedelta(days=get_settings().consent_purge_days)
+    ids = set()
     for s in db.scalars(select(Source).where(Source.consent_id == consent.id, Source.status != "revoked")).all():
         s.status = "revoked"
         s.delete_after = due
-        n += 1
+        ids.add(s.id)
     db.flush()
-    if n:
+    if ids:
         rebuild_ledger(db, consent.user_id)
-    return n
+    return len(ids), _close_share_links(db, consent, ids, actor_id, ip)
 
 
-def revoke(db: Session, consent: Consent, actor_id: int, ip: str = "") -> int:
+def revoke(db: Session, consent: Consent, actor_id: int, ip: str = "") -> tuple[int, int]:
     consent.revoked_at = utcnow()
-    n = _withdraw_sources(db, consent)
-    audit(db, actor_id, "consent.revoke", "consent", consent.id, {"sources_withdrawn": n}, ip)
-    return n
+    n, links = _withdraw_sources(db, consent, actor_id, ip)
+    audit(db, actor_id, "consent.revoke", "consent", consent.id, {"sources_withdrawn": n, "share_links_closed": links}, ip)
+    return n, links
 
 
 def purge_due(db: Session) -> dict:
     """Withdraw sources whose consent expired, and delete sources whose scheduled deletion time has passed."""
     now = utcnow()
     expired = db.scalars(select(Consent).where(Consent.revoked_at.is_(None), Consent.expires_at <= now)).all()
-    withdrawn = sum(_withdraw_sources(db, c) for c in expired)
+    withdrawn = sum(_withdraw_sources(db, c)[0] for c in expired)
     due = db.scalars(select(Source).where(Source.status == "revoked", Source.delete_after.is_not(None),
                                           Source.delete_after <= now)).all()
     for s in due:

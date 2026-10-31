@@ -52,9 +52,9 @@ export function EvidenceTable({ rows, showPair, actions }: { rows: LedgerRow[]; 
               <td className="whitespace-nowrap">
                 <div className="flex flex-wrap gap-1">
                   <Pill tone={r.counted ? "green" : "slate"}>{t(`ledger.kinds.${r.kind}`, { defaultValue: titleCase(r.kind) })}</Pill>
-                  {r.category && !["payout", "general", "customer_payment"].includes(r.category) && <Pill>{titleCase(r.category)}</Pill>}
+                  {r.category && !["payout", "general", "customer_payment"].includes(r.category) && <Pill>{t(`ledger.cats.${r.category}`, { defaultValue: titleCase(r.category) })}</Pill>}
                   {r.platform && <Pill tone="teal">{r.platform}</Pill>}
-                  {r.match_status === "matched" && <Pill tone="green">Matched</Pill>}
+                  {r.match_status === "matched" && <Pill tone="green">{t("ledger.matched")}</Pill>}
                   {r.flags.map((f) => (
                     <Pill key={f} tone="amber">
                       {t(`ledger.flags.${f}`, { defaultValue: titleCase(f) })}

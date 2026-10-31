@@ -68,7 +68,7 @@ const hi: Dict = {
     yes: "हाँ", no: "नहीं", all: "सभी प्रकार", page: "पेज {{p}} / {{n}}", prev: "पिछला", next: "अगला", recategorise: "श्रेणी बदलें",
     kinds: { earned: "कमाई", self_transfer: "अपना ट्रांसफ़र", refund: "रिफ़ंड", loan: "कर्ज़", expense: "खर्च", other: "अन्य" },
     cats: { rent: "किराया", utilities: "बिल", fuel: "ईंधन", emi: "कर्ज़ की किस्त", savings: "बचत", other: "अन्य खर्च" },
-    flags: { round_trip: "अपने ट्रांसफ़र जैसा", unmatched_payout: "बैंक मिलान नहीं", unexplained_large_credit: "बड़ी एक-बार की रकम" },
+    matched: "मिलान हुआ", flags: { round_trip: "अपने ट्रांसफ़र जैसा", unmatched_payout: "बैंक मिलान नहीं", unexplained_large_credit: "बड़ी एक-बार की रकम" },
     empty: "अभी कोई लेन-देन नहीं।",
   },
   sources: {
@@ -93,8 +93,8 @@ const hi: Dict = {
     new: "नई सहमति दें", source_kind: "हम क्या पढ़ सकते हैं", purpose: "उद्देश्य", days: "वैधता (दिन)", grant: "सहमति दें",
     kinds: { bank_statement: "बैंक स्टेटमेंट", platform_statement: "प्लेटफ़ॉर्म भुगतान स्टेटमेंट", account_aggregator: "अकाउंट एग्रीगेटर डेटा" },
     purposes: { income_assessment: "मेरा कमाई पासपोर्ट बनाएँ", loan_application: "मेरे चुने ऋणदाता के साथ साझा करें", monitoring: "कर्ज़ के दौरान मासिक अपडेट" },
-    status: { active: "सक्रिय", expired: "समाप्त", revoked: "वापस ली गई" }, revoke: "वापस लें", revoke_confirm: "यह सहमति वापस लें? इसके तहत स्रोतों का उपयोग अभी बंद होगा और छूट अवधि के बाद वे हटा दिए जाएँगे।",
-    scope: "दायरा", granted: "दी गई", expires: "समाप्ति", sources: "{{n}} स्रोत", empty: "अभी कोई सहमति नहीं।", revoked_ok: "सहमति वापस ली गई। {{n}} स्रोत हटाए गए।",
+    status: { active: "सक्रिय", expired: "समाप्त", revoked: "वापस ली गई" }, revoke: "वापस लें", revoke_confirm: "यह सहमति वापस लें? इसके तहत स्रोतों का उपयोग अभी बंद होगा और छूट अवधि के बाद वे हटा दिए जाएँगे। इस डेटा वाले लेंडर शेयर लिंक बंद हो जाएँगे।",
+    scope: "दायरा", granted: "दी गई", expires: "समाप्ति", sources: "{{n}} स्रोत", empty: "अभी कोई सहमति नहीं।", revoked_ok: "सहमति वापस ली गई। {{n}} स्रोत हटाए गए, {{m}} शेयर लिंक बंद किए गए।",
   },
   improve: {
     title: "सुधार कैसे करें", sub: "हर कदम को आपका पासपोर्ट दोबारा स्कोर करके जाँचा गया है। हम कभी ज़्यादा घंटे काम करने या ज़्यादा प्लेटफ़ॉर्म जोड़ने की सलाह नहीं देते।",

@@ -66,7 +66,7 @@ const en = {
     yes: "Yes", no: "No", all: "All types", page: "Page {{p}} of {{n}}", prev: "Previous", next: "Next", recategorise: "Change category",
     kinds: { earned: "Earned", self_transfer: "Own transfer", refund: "Refund", loan: "Loan", expense: "Expense", other: "Other" },
     cats: { rent: "Rent", utilities: "Bills", fuel: "Fuel", emi: "Loan repayment", savings: "Savings", other: "Other spending" },
-    flags: { round_trip: "Mirrors own transfer", unmatched_payout: "No bank match", unexplained_large_credit: "Large one-off" },
+    matched: "Matched", flags: { round_trip: "Mirrors own transfer", unmatched_payout: "No bank match", unexplained_large_credit: "Large one-off" },
     empty: "No transactions yet.",
   },
   sources: {
@@ -91,8 +91,8 @@ const en = {
     new: "Give a new consent", source_kind: "What we may read", purpose: "Purpose", days: "Valid for (days)", grant: "Give consent",
     kinds: { bank_statement: "Bank statements", platform_statement: "Platform payout statements", account_aggregator: "Account Aggregator data" },
     purposes: { income_assessment: "Build my Earnings Passport", loan_application: "Share with a lender I choose", monitoring: "Monthly refresh during a loan" },
-    status: { active: "Active", expired: "Expired", revoked: "Revoked" }, revoke: "Revoke", revoke_confirm: "Revoke this consent? Sources under it stop being used now and are deleted after the grace period.",
-    scope: "Scope", granted: "Given", expires: "Expires", sources: "{{n}} sources", empty: "No consents yet.", revoked_ok: "Consent revoked. {{n}} source(s) withdrawn.",
+    status: { active: "Active", expired: "Expired", revoked: "Revoked" }, revoke: "Revoke", revoke_confirm: "Revoke this consent? Sources under it stop being used now and are deleted after the grace period. Share links to lenders that include this data are closed.",
+    scope: "Scope", granted: "Given", expires: "Expires", sources: "{{n}} sources", empty: "No consents yet.", revoked_ok: "Consent revoked. {{n}} source(s) withdrawn, {{m}} share link(s) closed.",
   },
   improve: {
     title: "How to improve", sub: "Each step was tested by re-scoring your passport. We never suggest working more hours or joining more platforms.",

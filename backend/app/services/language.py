@@ -1,4 +1,4 @@
-"""Language layer (BUILD.md 6.6): an LLM may only (a) tag ambiguous narrations and (b) rewrite reason text.
+"""Language layer: an LLM may only (a) tag ambiguous narrations and (b) rewrite reason text.
 
 It never alters a number: every number in generated text must equal a number in the template text,
 otherwise the template text is used. The template provider is always available and is the default.

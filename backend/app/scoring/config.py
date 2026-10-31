@@ -1,4 +1,4 @@
-"""Every scoring constant lives here (BUILD.md section 6). Nothing is inlined in the scoring functions.
+"""Every scoring constant lives here. Nothing is inlined in the scoring functions.
 
 Curves are piecewise-linear: a list of (x, score) points, interpolated and clipped at the ends.
 """
@@ -46,7 +46,7 @@ CURVES = {
     "active_week_share": [(0.5, 0), (0.75, 50), (0.9, 80), (1.0, 100)],
     "longest_gap_days": [(7, 100), (14, 80), (28, 50), (56, 0)],
     "payout_gap_cv": [(0.0, 100), (0.5, 70), (1.0, 35), (1.5, 0)],
-    # 1 - V_res mapped piecewise-linearly (BUILD.md 6.2)
+    # 1 - V_res mapped piecewise-linearly
     "one_minus_v_res": [(0.2, 0), (0.5, 40), (0.7, 70), (0.85, 90), (1.0, 100)],
     "downside_dev": [(0.0, 100), (0.1, 80), (0.25, 40), (0.5, 0)],
     "recovery_weeks": [(1, 100), (2, 80), (4, 50), (8, 0)],

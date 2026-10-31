@@ -574,7 +574,7 @@ export function Consents() {
     mutationFn: (id: number) => api(`/worker/consents/${id}/revoke`, { method: "POST" }),
     onSuccess: (r: any) => {
       setRevoke(null);
-      setMsg(t("consents.revoked_ok", { n: r.sources_withdrawn }));
+      setMsg(t("consents.revoked_ok", { n: r.sources_withdrawn, m: r.share_links_closed }));
       ["consents", "sources", "passport", "ledger"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
     },
   });

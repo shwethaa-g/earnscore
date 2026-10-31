@@ -1,4 +1,4 @@
-"""Validation simulator (BUILD.md section 7).
+"""Validation simulator.
 
 Simulates >= 5,000 workers. Each worker's history (26-78 weeks) is scored with the real scoring engine;
 the life then continues for 26 more weeks with a new weekly loan EMI. A worker defaults ONLY when cash

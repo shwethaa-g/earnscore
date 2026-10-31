@@ -5,6 +5,9 @@
   generate   generate the named worker accounts + cohort population through the upload pipeline
   simulate   run the validation simulator (>= 5,000 workers), train/register EBM v2, store in sim_runs
   purge      withdraw expired consents and delete data whose scheduled deletion time has passed
+  walkthrough-files  write the statement files used by the Playwright flows
+  ensure-data  generate the dataset and the validation run if the database has none (container start)
+  verify-clean wait for /healthz and check the database is in the freshly generated state (read-only)
 """
 from __future__ import annotations
 
@@ -12,6 +15,7 @@ import argparse
 import logging
 import sys
 import time
+from pathlib import Path
 
 from sqlalchemy import select
 
@@ -116,6 +120,31 @@ def purge() -> None:
         print(purge_due(db))
 
 
+def walkthrough_files(out: str | None) -> None:
+    from app.core.config import BACKEND_DIR
+    from app.sim.walkthrough_files import write
+
+    for path in write(Path(out) if out else BACKEND_DIR.parent / "frontend" / "e2e" / "fixtures"):
+        print(path)
+
+
+def ensure_data() -> None:
+    from app.models import SimRun, User
+    from app.sim.generate import NAMED, email_for
+
+    with SessionLocal() as db:
+        has_workers = db.scalar(select(User.id).where(User.email == email_for(NAMED[0][0]))) is not None
+        has_run = db.scalar(select(SimRun.id).limit(1)) is not None
+    if not has_workers:
+        print("no generated dataset found: generating it")
+        generate(21)
+    if not has_run:
+        print("no validation run found: running the simulator")
+        simulate(5000)
+    if has_workers and has_run:
+        print("generated dataset present")
+
+
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     ap = argparse.ArgumentParser(prog="python -m app.cli")
@@ -127,6 +156,11 @@ def main(argv: list[str] | None = None) -> None:
     sm = sub.add_parser("simulate")
     sm.add_argument("--workers", type=int, default=5000)
     sub.add_parser("purge")
+    wf = sub.add_parser("walkthrough-files")
+    wf.add_argument("--out", default=None)
+    sub.add_parser("ensure-data")
+    vc = sub.add_parser("verify-clean")
+    vc.add_argument("--url", default=None)
     a = ap.parse_args(argv)
     if a.cmd == "migrate":
         migrate()
@@ -138,6 +172,14 @@ def main(argv: list[str] | None = None) -> None:
         simulate(a.workers)
     elif a.cmd == "purge":
         purge()
+    elif a.cmd == "walkthrough-files":
+        walkthrough_files(a.out)
+    elif a.cmd == "ensure-data":
+        ensure_data()
+    elif a.cmd == "verify-clean":
+        from app.sim.clean_state import main as verify
+
+        verify(a.url)
 
 
 if __name__ == "__main__":

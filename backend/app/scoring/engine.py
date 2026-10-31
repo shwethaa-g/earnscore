@@ -1,4 +1,4 @@
-"""Scoring engine (BUILD.md section 6) as pure functions over a ScoringInput.
+"""Scoring engine as pure functions over a ScoringInput.
 
 ScoringInput is built from reconciled ledger rows (app/services/snapshots.py) or directly by the
 validation simulator (app/sim/simulate.py). Every constant comes from scoring/config.py.
@@ -87,7 +87,7 @@ def _in_days(events: list[Event], as_of: date, days: int) -> list[Event]:
 # ---------------------------------------------------------------- seasonality
 
 def seasonal_adjust(weeks: list[date], y: np.ndarray, cohort_index: dict[int, float] | None, cohort_n: int) -> dict:
-    """Return adjusted, residual and seasonal arrays plus the method used (BUILD.md 6.1)."""
+    """Return adjusted, residual and seasonal arrays plus the method used."""
     s = pd.Series(y, index=pd.to_datetime(weeks))
     n = len(y)
     if n >= C.STL_MIN_WEEKS:

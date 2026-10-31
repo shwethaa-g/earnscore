@@ -1,4 +1,4 @@
-"""Deterministic model of a gig worker's financial life (DATA_SOURCES.md section 3).
+"""Deterministic model of a gig worker's financial life.
 
 Produces day-level bank transactions per account and platform payout rows. Everything here is generated:
 names, accounts and amounts are fictional. Platform names are labels only.
@@ -162,11 +162,15 @@ class _Book:
 
     def credit(self, d, acct, narr, amt, cat, platform=""):
         amt = round(amt, 2)
+        if amt <= 0:  # no bank prints a zero-amount line
+            return
         self.bal[acct] = round(self.bal[acct] + amt, 2)
         self.txns.append(Txn(d, acct, narr, "credit", amt, cat, platform, self.bal[acct], self.ref()))
 
     def debit(self, d, acct, narr, amt, cat, force=False) -> bool:
         amt = round(amt, 2)
+        if amt <= 0:
+            return True  # nothing to pay; no zero-amount line
         if not force and self.bal[acct] < amt:
             return False
         self.bal[acct] = round(self.bal[acct] - amt, 2)

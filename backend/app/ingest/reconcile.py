@@ -1,4 +1,4 @@
-"""Reconciliation rule (BUILD.md section 5.3), as pure functions.
+"""Reconciliation rule, as pure functions.
 
 A platform payout and a bank credit match when
     |amount_diff| / payout_amount <= 1%  AND  0 <= credit_date - payout_date <= 3 days

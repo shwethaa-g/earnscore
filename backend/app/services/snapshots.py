@@ -114,7 +114,8 @@ def create_snapshot(db: Session, user: User, as_of: date | None = None, alpha: f
                     dsi_parts=out["dsi"], safe_emi=out["emi"]["safe_emi"], alpha=alpha, f20=out["features"]["f20"],
                     e_ess=out["features"]["e_ess"], features=_jsonable(out["features"]), flags=out["flags"],
                     watchouts=out["watchouts"], seasonality_method=out["features"]["seasonality_method"],
-                    series=out["series"], reconciliation=reconciliation_summary(db, user.id, as_of))
+                    series=out["series"], reconciliation=reconciliation_summary(db, user.id, as_of),
+                    source_ids=[s.id for s in active_sources(db, user.id)])
     for p, pd_ in out["pillars"].items():
         snap.pillars.append(PillarScore(pillar=p, score=pd_["score"], weight=pd_["weight"],
                                         contribution=pd_["contribution"], components=pd_["components"]))

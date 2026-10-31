@@ -7,7 +7,7 @@ endif
 BE := cd backend &&
 BPY := $(abspath $(PY))
 
-.PHONY: install migrate seed generate simulate data dev-api dev-web build test test-backend test-frontend e2e up down purge
+.PHONY: install migrate seed generate simulate data dev-api dev-web build test test-backend test-frontend e2e up down purge reset
 
 install:            ## create the venv and install backend + frontend dependencies
 	python -m venv backend/.venv
@@ -56,3 +56,10 @@ up:
 
 down:
 	docker compose down
+
+reset:              ## wipe the app database and restore the generated dataset, then verify it
+ifeq ($(OS),Windows_NT)
+	powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reset.ps1
+else
+	sh scripts/reset.sh
+endif

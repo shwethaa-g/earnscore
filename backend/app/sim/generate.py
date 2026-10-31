@@ -1,4 +1,4 @@
-"""Deterministic generator (DATA_SOURCES.md section 3).
+"""Deterministic generator.
 
 Writes generated bank and platform statements as files in several realistic formats, then ingests them
 through the same upload pipeline a user's file goes through (pipeline.store_upload). Nothing derived
